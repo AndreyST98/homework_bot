@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
+"""Что то исправил."""
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
@@ -35,6 +35,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+"""Не понимаю что не так ,все как в теории."""
 handler = RotatingFileHandler('my_logger.log', maxBytes=500000,
                               backupCount=2)
 logger.addHandler(handler)
@@ -106,7 +107,7 @@ def check_response(response):
         logger.error(message)
         raise KeyError(message)
 
-    if type(response['homeworks']) is not list:
+    if not isinstance(response['homeworks'], list):
         message = 'Домашние работы не являются списком!'
         logger.error(message)
         raise TypeError(message)
@@ -114,9 +115,6 @@ def check_response(response):
     if not response['homeworks']:
         message = 'Список работ пуст!'
         logger.error(message)
-        raise ListHomeworkEmptyError(message)
-    else:
-        return response['homeworks']
 
 
 def parse_status(homework):
@@ -133,10 +131,6 @@ def parse_status(homework):
         message = 'Ключа status нет в словаре.'
         logger.error(message)
         raise KeyError(message)
-    if HOMEWORK_STATUSES[homework['status']] is None:
-        message = "Нет вердикта."
-        logger.error(message)
-        raise HomeworkVerdictError("Нет вердикта!")
     else:
         homework_name = homework['homework_name']
         homework_status = homework['status']
@@ -151,18 +145,15 @@ def check_tokens():
         'Программа принудительно остановлена. '
         'Отсутствует обязательная переменная окружения:')
     tokens_bool = True
-    if PRACTICUM_TOKEN is None:
-        tokens_bool = False
+    tokens_and_id = ['PRACTICUM_TOKEN',
+                     'ELEGRAM_TOKEN',
+                     'TELEGRAM_CHAT_ID'
+                     ]
+    for key in tokens_and_id:
+        if key is None:
+            tokens_bool = False
         logger.critical(
-            f'{no_tokens_msg} PRACTICUM_TOKEN')
-    if TELEGRAM_TOKEN is None:
-        tokens_bool = False
-        logger.critical(
-            f'{no_tokens_msg} TELEGRAM_TOKEN')
-    if TELEGRAM_CHAT_ID is None:
-        tokens_bool = False
-        logger.critical(
-            f'{no_tokens_msg} TELEGRAM_CHAT_ID')
+            f'{no_tokens_msg} {key}')
     return tokens_bool
 
 
@@ -183,16 +174,13 @@ def main():
                 send_message(bot, message)
                 tmp_status = homework['status']
             logger.info(
-                'Изменений нет, ждем 10 минут и проверяем API')
-            time.sleep(RETRY_TIME)
+                f'Изменений нет, {RETRY_TIME} секунд и проверяем API')
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if errors:
-                errors = False
-                send_message(bot, message)
-            logger.critical(message)
-            time.sleep(RETRY_TIME)
+            if errors != errors:
+                logger.error(message)
+        time.sleep(RETRY_TIME)
 
 
 if __name__ == '__main__':
