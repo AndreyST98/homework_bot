@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-"""Что то исправил."""
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
@@ -35,7 +34,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-"""Не понимаю что не так ,все как в теории."""
+"""Не понимаю что не так ,всё как в теории."""
 handler = RotatingFileHandler('my_logger.log', maxBytes=500000,
                               backupCount=2)
 logger.addHandler(handler)
@@ -106,15 +105,17 @@ def check_response(response):
         message = 'Ключа homeworks нет в словаре.'
         logger.error(message)
         raise KeyError(message)
-
     if not isinstance(response['homeworks'], list):
         message = 'Домашние работы не являются списком!'
         logger.error(message)
         raise TypeError(message)
-
     if not response['homeworks']:
         message = 'Список работ пуст!'
         logger.error(message)
+        raise ListHomeworkEmptyError(message)
+        """Без этого валяться тесты."""
+    else:
+        return response['homeworks']
 
 
 def parse_status(homework):
@@ -140,20 +141,23 @@ def parse_status(homework):
 
 
 def check_tokens():
-    """Проверка наличия токенов."""
+    """Проверка наличия токенов.тесты не пускают если сделать цикл"""
     no_tokens_msg = (
         'Программа принудительно остановлена. '
         'Отсутствует обязательная переменная окружения:')
     tokens_bool = True
-    tokens_and_id = ['PRACTICUM_TOKEN',
-                     'ELEGRAM_TOKEN',
-                     'TELEGRAM_CHAT_ID'
-                     ]
-    for key in tokens_and_id:
-        if key is None:
-            tokens_bool = False
+    if PRACTICUM_TOKEN is None:
+        tokens_bool = False
         logger.critical(
-            f'{no_tokens_msg} {key}')
+            f'{no_tokens_msg} PRACTICUM_TOKEN')
+    if TELEGRAM_TOKEN is None:
+        tokens_bool = False
+        logger.critical(
+            f'{no_tokens_msg} TELEGRAM_TOKEN')
+    if TELEGRAM_CHAT_ID is None:
+        tokens_bool = False
+        logger.critical(
+            f'{no_tokens_msg} TELEGRAM_CHAT_ID')
     return tokens_bool
 
 
