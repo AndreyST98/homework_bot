@@ -25,7 +25,6 @@ HOMEWORK_STATUSES = {
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
 }
 
-h1 = logging.StreamHandler(sys.stdout)
 logging.basicConfig(
     level=logging.DEBUG,
     filename='program.log',
@@ -132,12 +131,11 @@ def parse_status(homework):
         message = "Нет вердикта."
         logger.error(message)
         raise HomeworkVerdictError("Нет вердикта!")
-    else:
-        homework_name = homework['homework_name']
-        homework_status = homework['status']
-        verdict = HOMEWORK_STATUSES[homework_status]
-        return(f'Изменился статус проверки работы "{homework_name}".'
-               f'{verdict}')
+    homework_name = homework['homework_name']
+    homework_status = homework['status']
+    verdict = HOMEWORK_STATUSES[homework_status]
+    return(f'Изменился статус проверки работы "{homework_name}".'
+           f'{verdict}')
 
 
 def check_tokens():
@@ -160,7 +158,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     tmp_status = 'reviewing'
-    errors = True
+    last_error = None
     while True:
         try:
             response = get_api_answer(current_timestamp)
@@ -171,10 +169,12 @@ def main():
                 tmp_status = homework['status']
             logger.info(
                 f'Изменений нет, {RETRY_TIME} секунд и проверяем API')
+            current_timestamp = response['current_date']
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if error == errors:
+            if last_error:
+                last_error = not None
                 send_message(bot, message)
                 logger.error(message)
         time.sleep(RETRY_TIME)
