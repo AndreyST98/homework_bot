@@ -158,7 +158,7 @@ def main():
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
     tmp_status = 'reviewing'
-    last_error = None
+    error_message = None
     while True:
         try:
             response = get_api_answer(current_timestamp)
@@ -169,14 +169,14 @@ def main():
                 tmp_status = homework['status']
             logger.info(
                 f'Изменений нет, {RETRY_TIME} секунд и проверяем API')
-            current_timestamp = response['current_date']
+            current_timestamp = response.get('current_date', current_timestamp)
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            if last_error:
-                last_error = not None
-                send_message(bot, message)
-                logger.error(message)
+            logger.error(message)
+            if error_message != message:
+                error_message = message
+                send_message(bot, error_message)
         time.sleep(RETRY_TIME)
 
 
